@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vyhledávač 1.0 - Seznam Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding-top: 50px; color: #333; }
+        .search-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
+        h1 { color: #1a73e8; margin-bottom: 25px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 2px solid #dfe1e5; border-radius: 24px; outline: none; transition: 0.3s; font-size: 16px; }
+        input:focus { border-color: #1a73e8; }
+        button { padding: 10px 20px; border: none; border-radius: 24px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-search { background: #1a73e8; color: white; }
+        .btn-search:hover { background: #1557b0; }
+        
+        #downloadArea { margin-top: 20px; padding: 15px; border-top: 1px solid #eee; display: none; }
+        select { padding: 10px; border-radius: 20px; border: 2px solid #34a853; outline: none; margin-bottom: 10px; }
+        .btn-download { background: #34a853; color: white; width: 100%; }
+        .btn-download:hover { background: #2d9147; }
+
+        #results { margin-top: 20px; width: 100%; max-width: 500px; }
+        .result-item { background: white; padding: 15px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid #1a73e8; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="search-container">
+        <h1>🔎 Co tě dnes zajímá?</h1>
+        <div class="input-group">
+            <input type="text" id="query" placeholder="Zadej klíčové slovo...">
+            <button class="btn-search" onclick="handleSearch()">Hledej</button>
+        </div>
+
+        <div id="downloadArea">
+            <p style="font-size: 14px; margin-bottom: 10px; color: #666;">Výsledky jsou připraveny k uložení:</p>
+            <select id="formatSelect">
+                <option value="json">Formát JSON </option>
+                <option value="csv">Formát CSV </option>
+            </select>
+            <button class="btn-download" onclick="univerzalniStahovani()">
+                💾 Stáhnout výsledky
+            </button>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let currentData = null;
+
+        async function handleSearch() {
+            const query = document.getElementById('query').value;
+            const resDiv = document.getElementById('results');
+            const dlArea = document.getElementById('downloadArea');
+
+            if (!query) {
+                alert('Musíš něco napsat!');
+                return;
+            }
+
+            resDiv.innerHTML = '<p>Pracuji na tom, momentík...</p>';
+            dlArea.style.display = 'none';
+
+            try {
+                // Posíláme dotaz na náš Node.js server
+                const response = await fetch('/search?q=' + query);
+                currentData = await response.json();
+
+                resDiv.innerHTML = '';
+                
+                if (currentData.data && currentData.data.length > 0) {
+                    resDiv.innerHTML = `<h3>Nalezeno výsledků: ${currentData.pocet_vysledku}</h3>`;
+                    currentData.data.forEach(item => {
+                        resDiv.innerHTML += `<div class="result-item">${item.id}. ${item.text}</div>`;
+                    });
+                    // Zobrazíme oblast pro stažení
+                    dlArea.style.display = 'block';
+                } else {
+                    resDiv.innerHTML = '<p>Bohužel nic nenalezeno. Zkus jiné slovo.</p>';
+                }
+            } catch (err) {
+                resDiv.innerHTML = '<p style="color:red;">Server neodpovídá. Máš spuštěný node server.js?</p>';
+                console.error(err);
+            }
+        }
+
+        function univerzalniStahovani() {
+            if (!currentData) return;
+
+            const format = document.getElementById('formatSelect').value;
+
+            if (format === 'json') {
+                // Uložení jako JSON
+                const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
+                stahniBlob(blob, `vysledky_${currentData.hledano}.json`);
+            } else {
+                // Uložení jako CSV pro Excel (včetně BOM pro správnou češtinu)
+                let csvContent = "\uFEFFID;Nadpis\n"; 
+                currentData.data.forEach(item => {
+                    csvContent += `${item.id};"${item.text.replace(/"/g, '""')}"\n`;
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                stahniBlob(blob, `vysledky_${currentData.hledano}.csv`);
+            }
+        }
+
+        function stahniBlob(blob, nazevSouboru) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nazevSouboru;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
+
