@@ -21,11 +21,13 @@ app.get('/search', async (req, res) => {
         const results = [];
 
         // OPRAVA SELEKTORU: Seznam změnil třídy, tyhle jsou aktuální:
-        $('.SearchResult-title a').each((i, el) => {
-            const title = $(el).text().trim();
-            const link = $(el).attr('href');
-            if (title && link) {
-                results.push({ title, link });
+        $('a').each((i, el) => {
+                        const title = $(el).text().trim();
+                        const link = $(el).attr('href');
+            if (title && link && (link.includes('szn.cz') || link.includes('click.seznam.cz'))) {
+        results.push({ 
+            title: title.substring(0, 100), // Ořízneme moc dlouhé texty
+            link: link });
             }
         });
 
