@@ -1,20 +1,27 @@
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const path = require('path'); // Přidáno pro správné cesty
-const app = express();
+const path = require('path');
+const cors = require('cors'); // PŘIDÁNO: Nutné pro propojení s frontendem
 
-// 1. DŮLEŽITÉ: Tohle řekne Renderu, kde najde tvůj index.html
+const app = express();
+app.use(cors()); // PŘIDÁNO: Bez tohohle ti to Render může blokovat
 app.use(express.static(path.join(__dirname, '.')));
 
 app.get('/search', async (req, res) => {
     const query = req.query.q;
+    if (!query) return res.status(400).json({ error: 'Chybí dotaz' }); // PŘIDÁNO: Oprava pro testy
+
     try {
-        const response = await axios.get(`https://search.seznam.cz/?q=${encodeURIComponent(query)}`);
+        const response = await axios.get(`https://search.seznam.cz/?q=${encodeURIComponent(query)}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0' } // PŘIDÁNO: Aby tě Seznam hned neodstřelil
+        });
+        
         const $ = cheerio.load(response.data);
         const results = [];
 
-        $('.Result-header-title').each((i, el) => {
+        // OPRAVA SELEKTORU: Seznam změnil třídy, tyhle jsou aktuální:
+        $('.SearchResult-title a').each((i, el) => {
             const title = $(el).text().trim();
             const link = $(el).attr('href');
             if (title && link) {
@@ -28,13 +35,16 @@ app.get('/search', async (req, res) => {
     }
 });
 
-// 2. DŮLEŽITÉ: Tohle zajistí, že se při vstupu na hlavní adresu zobrazí tvůj web
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 3. DŮLEŽITÉ: Port, který si Render určí sám (nebo 3000 jako záloha)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server běží na portu ${PORT}`);
-});
+// OPRAVA PRO TESTY: Aby se port nebil s Jestem
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server běží na portu ${PORT}`);
+    });
+}
+
+module.exports = app;

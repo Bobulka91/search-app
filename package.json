@@ -53,6 +53,7 @@
     "cookie": "^0.7.2",
     "cookie-signature": "^1.0.7",
     "cookiejar": "^2.1.4",
+    "cors": "^2.8.6",
     "create-jest": "^29.7.0",
     "cross-spawn": "^7.0.6",
     "css-select": "^5.2.2",

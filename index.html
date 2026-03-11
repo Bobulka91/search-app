@@ -49,6 +49,7 @@
 
     <script>
         let currentData = null;
+        let lastQuery = "";
 
         async function handleSearch() {
             const query = document.getElementById('query').value;
@@ -60,49 +61,49 @@
                 return;
             }
 
+            lastQuery = query;
             resDiv.innerHTML = '<p>Pracuji na tom, momentík...</p>';
             dlArea.style.display = 'none';
 
             try {
-                // Posíláme dotaz na náš Node.js server
-                const response = await fetch('/search?q=' + query);
-                currentData = await response.json();
+                const response = await fetch('/search?q=' + encodeURIComponent(query));
+                currentData = await response.json(); // Server vrací pole [{title, link}, ...]
 
                 resDiv.innerHTML = '';
                 
-                if (currentData.data && currentData.data.length > 0) {
-                    resDiv.innerHTML = `<h3>Nalezeno výsledků: ${currentData.pocet_vysledku}</h3>`;
-                    currentData.data.forEach(item => {
-                        resDiv.innerHTML += `<div class="result-item">${item.id}. ${item.text}</div>`;
+                if (Array.isArray(currentData) && currentData.length > 0) {
+                    resDiv.innerHTML = `<h3>Nalezeno výsledků: ${currentData.length}</h3>`;
+                    currentData.forEach((item, index) => {
+                        resDiv.innerHTML += `
+                            <div class="result-item">
+                                <strong>${index + 1}. ${item.title}</strong><br>
+                                <a href="${item.link}" target="_blank" style="font-size: 12px; color: #1a73e8;">${item.link}</a>
+                            </div>`;
                     });
-                    // Zobrazíme oblast pro stažení
                     dlArea.style.display = 'block';
                 } else {
                     resDiv.innerHTML = '<p>Bohužel nic nenalezeno. Zkus jiné slovo.</p>';
                 }
             } catch (err) {
-                resDiv.innerHTML = '<p style="color:red;">Server neodpovídá. Máš spuštěný node server.js?</p>';
+                resDiv.innerHTML = '<p style="color:red;">Chyba při komunikaci se serverem.</p>';
                 console.error(err);
             }
         }
 
         function univerzalniStahovani() {
             if (!currentData) return;
-
             const format = document.getElementById('formatSelect').value;
 
             if (format === 'json') {
-                // Uložení jako JSON
                 const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
-                stahniBlob(blob, `vysledky_${currentData.hledano}.json`);
+                stahniBlob(blob, `vysledky_${lastQuery}.json`);
             } else {
-                // Uložení jako CSV pro Excel (včetně BOM pro správnou češtinu)
-                let csvContent = "\uFEFFID;Nadpis\n"; 
-                currentData.data.forEach(item => {
-                    csvContent += `${item.id};"${item.text.replace(/"/g, '""')}"\n`;
+                let csvContent = "\uFEFFID;Nadpis;Odkaz\n"; 
+                currentData.forEach((item, index) => {
+                    csvContent += `${index + 1};"${item.title.replace(/"/g, '""')}";"${item.link}"\n`;
                 });
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                stahniBlob(blob, `vysledky_${currentData.hledano}.csv`);
+                stahniBlob(blob, `vysledky_${lastQuery}.csv`);
             }
         }
 
