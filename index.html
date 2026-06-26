@@ -3,26 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vyhledávač 1.0 - Seznam Edition</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding-top: 50px; color: #333; }
-        .search-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
-        h1 { color: #1a73e8; margin-bottom: 25px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #dfe1e5; border-radius: 24px; outline: none; transition: 0.3s; font-size: 16px; }
-        input:focus { border-color: #1a73e8; }
-        button { padding: 10px 20px; border: none; border-radius: 24px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-search { background: #1a73e8; color: white; }
-        .btn-search:hover { background: #1557b0; }
-        
-        #downloadArea { margin-top: 20px; padding: 15px; border-top: 1px solid #eee; display: none; }
-        select { padding: 10px; border-radius: 20px; border: 2px solid #34a853; outline: none; margin-bottom: 10px; }
-        .btn-download { background: #34a853; color: white; width: 100%; }
-        .btn-download:hover { background: #2d9147; }
+    <title>Search App – vyhledávač</title>
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #0ea5a4;
+        --accent-dark: #0c8786;
+        --bg: #f3f4f6;
+        --text: #1f2937;
+        --muted: #6b7280;
+    }
 
-        #results { margin-top: 20px; width: 100%; max-width: 500px; }
-        .result-item { background: white; padding: 15px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid #1a73e8; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; }
-    </style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 50px;
+        color: var(--text);
+    }
+
+    .search-container {
+        background: white;
+        padding: 32px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+    }
+
+    h1 {
+        color: var(--text);
+        font-size: 22px;
+        margin-bottom: 25px;
+    }
+
+    .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+
+    input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 24px;
+        outline: none;
+        transition: 0.2s;
+        font-size: 15px;
+    }
+    input:focus { border-color: var(--primary); }
+
+    button {
+        padding: 10px 22px;
+        border: none;
+        border-radius: 24px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-search { background: var(--primary); color: white; }
+    .btn-search:hover { background: var(--primary-dark); }
+
+    #downloadArea {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid #eee;
+        display: none;
+    }
+
+    select {
+        padding: 10px 14px;
+        border-radius: 20px;
+        border: 2px solid #e5e7eb;
+        outline: none;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: var(--text);
+    }
+    select:focus { border-color: var(--accent); }
+
+    .btn-download { background: var(--accent); color: white; width: 100%; }
+    .btn-download:hover { background: var(--accent-dark); }
+
+    #results { margin-top: 24px; width: 100%; max-width: 500px; }
+
+    .result-item {
+        background: white;
+        padding: 16px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border-left: 4px solid var(--primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        text-align: left;
+    }
+    .result-item a { color: var(--primary); }
+</style>
 </head>
 <body>
 
